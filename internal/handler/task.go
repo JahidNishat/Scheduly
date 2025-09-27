@@ -3,27 +3,39 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/JahidNishat/scheduly/internal/service"
 )
 
-type CreateTaskRequest struct {
-	Method  string            `json:"method"`
-	Url     string            `json:"url"`
-	Headers map[string]string `json:"headers"`
-	Body    string            `json:"body"`
-	RunAt   string            `json:"run_at"`
+type TaskHandler struct {
+	service *service.TaskService
 }
 
-func CreateTask(w http.ResponseWriter, r *http.Request) {
+func NewTaskHandler(service *service.TaskService) *TaskHandler {
+	return &TaskHandler{service}
+}
+
+type CreateTaskRequest struct {
+	Method string `json:"method"`
+	Url    string `json:"url"`
+	Body   string `json:"body,omitempty"`
+	RunAt  string `json:"run_at"`
+}
+
+func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	var req CreateTaskRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "invalid request", http.StatusBadRequest)
 		return
 	}
 
-	response := map[string]string{
-		"task_id": "123456",
+	id, err := h.service.CreateTask(req.Method, req.Url, req.Body, req.RunAt)
+	if err != nil {
+		http.Error(w, "could not create task", http.StatusInternalServerError)
+		return
 	}
 
+	response := map[string]string{"task_id": id}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
