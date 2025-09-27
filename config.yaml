@@ -8,3 +8,11 @@ scheduler:
 
 http:
   timeout: 5s
+
+database:
+  host: localhost
+  port: 5432
+  user: postgres
+  password: postgres
+  dbname: scheduly
+  sslmode: disable

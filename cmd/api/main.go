@@ -17,9 +17,11 @@ func main() {
 	config.LoadConfig()
 	log.Println("config loaded successfully")
 
+	db := config.ConnectDB()
+
 	r := chi.NewRouter()
 
-	repo := repository.NewTaskRepository()
+	repo := repository.NewTaskRepository(db)
 	svc := service.NewTaskService(repo)
 	h := handler.NewTaskHandler(svc)
 

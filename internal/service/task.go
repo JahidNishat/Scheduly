@@ -1,6 +1,8 @@
 package service
 
 import (
+	"time"
+
 	"github.com/JahidNishat/scheduly/internal/repository"
 	"github.com/google/uuid"
 )
@@ -13,7 +15,7 @@ func NewTaskService(repo *repository.TaskRepository) *TaskService {
 	return &TaskService{repo}
 }
 
-func (s *TaskService) CreateTask(method, url, body, runAt string) (string, error) {
+func (s *TaskService) CreateTask(method, url, body string, runAt time.Time) (string, error) {
 	id := uuid.NewString()
 	task := repository.Task{
 		ID:       id,

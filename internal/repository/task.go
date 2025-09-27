@@ -1,56 +1,60 @@
 package repository
 
 import (
-	"errors"
+	"time"
+
+	"gorm.io/gorm"
 )
 
 type Task struct {
-	ID       string
-	Method   string
-	URL      string
+	ID       string `gorm:"type:uuid;primaryKey"`
+	Method   string `gorm:"not null"`
+	URL      string `gorm:"not null"`
 	Body     string
-	RunAt    string
-	Status   string
-	Attempts int
+	RunAt    time.Time `gorm:"not null"`
+	Status   string    `gorm:"not null"`
+	Attempts int       `gorm:"default:0"`
 }
 
 type TaskRepository struct {
-	tasks map[string]Task
+	db *gorm.DB
 }
 
-func NewTaskRepository() *TaskRepository {
+func NewTaskRepository(db *gorm.DB) *TaskRepository {
 	return &TaskRepository{
-		tasks: make(map[string]Task),
+		db: db,
 	}
 }
 
 func (t *TaskRepository) Save(task Task) error {
-	if task.ID == "" {
-		return errors.New("task ID is empty")
-	}
-	t.tasks[task.ID] = task
-	return nil
+	return t.db.Create(&task).Error
 }
 
-func (t *TaskRepository) Get(id string) (Task, error) {
-	task, ok := t.tasks[id]
-	if !ok {
-		return Task{}, errors.New("task not found")
+func (t *TaskRepository) Get(id string) (*Task, error) {
+	var task Task
+	err := t.db.Where("id = ?", id).First(&task).Error
+	if err != nil {
+		return nil, err
 	}
-	return task, nil
+	return &task, nil
 }
 
 func (t *TaskRepository) Tasks() map[string]Task {
-	return t.tasks
+	tasks := []Task{}
+	now := time.Now()
+	t.db.Where("run_at <= ? AND status = ?", now, "pending").Find(&tasks)
+
+	result := map[string]Task{}
+	for _, t := range tasks {
+		result[t.ID] = t
+	}
+	return result
 }
 
 func (t *TaskRepository) UpdateStatus(id, status string, attempts int) {
-	task, ok := t.tasks[id]
-	if !ok {
-		return
-	}
-
-	task.Status = status
-	task.Attempts = attempts
-	t.tasks[id] = task
+	t.db.Model(&Task{}).Where("id = ?", id).
+		Updates(map[string]interface{}{
+			"status":   status,
+			"attempts": attempts,
+		})
 }

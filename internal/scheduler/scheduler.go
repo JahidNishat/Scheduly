@@ -37,7 +37,7 @@ func (s *Scheduler) Start() {
 
 func (s *Scheduler) runPendingTasks() {
 	for id, task := range s.repo.Tasks() {
-		runAt, err := time.Parse(time.RFC3339, task.RunAt)
+		runAt, err := time.Parse(time.RFC3339, task.RunAt.String())
 		if err != nil {
 			fmt.Println("invalid time for task: ", id)
 			continue

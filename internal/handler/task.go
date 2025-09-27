@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/JahidNishat/scheduly/internal/service"
 )
@@ -16,10 +17,10 @@ func NewTaskHandler(service *service.TaskService) *TaskHandler {
 }
 
 type CreateTaskRequest struct {
-	Method string `json:"method"`
-	Url    string `json:"url"`
-	Body   string `json:"body,omitempty"`
-	RunAt  string `json:"run_at"`
+	Method string    `json:"method"`
+	Url    string    `json:"url"`
+	Body   string    `json:"body,omitempty"`
+	RunAt  time.Time `json:"run_at"`
 }
 
 func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
