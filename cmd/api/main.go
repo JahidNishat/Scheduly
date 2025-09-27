@@ -7,6 +7,7 @@ import (
 
 	"github.com/JahidNishat/scheduly/internal/handler"
 	"github.com/JahidNishat/scheduly/internal/repository"
+	"github.com/JahidNishat/scheduly/internal/scheduler"
 	"github.com/JahidNishat/scheduly/internal/service"
 	"github.com/go-chi/chi/v5"
 )
@@ -17,6 +18,9 @@ func main() {
 	repo := repository.NewTaskRepository()
 	svc := service.NewTaskService(repo)
 	h := handler.NewTaskHandler(svc)
+
+	scheduler := scheduler.NewScheduler(repo)
+	scheduler.Start()
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Scheduly API is running!"))

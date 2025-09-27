@@ -37,3 +37,7 @@ func (t *TaskRepository) Get(id string) (Task, error) {
 	}
 	return task, nil
 }
+
+func (t *TaskRepository) Tasks() map[string]Task {
+	return t.tasks
+}
