@@ -16,11 +16,13 @@ func NewTaskService(repo *repository.TaskRepository) *TaskService {
 func (s *TaskService) CreateTask(method, url, body, runAt string) (string, error) {
 	id := uuid.NewString()
 	task := repository.Task{
-		ID:     id,
-		Method: method,
-		URL:    url,
-		Body:   body,
-		RunAt:  runAt,
+		ID:       id,
+		Method:   method,
+		URL:      url,
+		Body:     body,
+		RunAt:    runAt,
+		Status:   "pending",
+		Attempts: 0,
 	}
 
 	if err := s.repo.Save(task); err != nil {

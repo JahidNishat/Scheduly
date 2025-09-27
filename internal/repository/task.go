@@ -5,11 +5,13 @@ import (
 )
 
 type Task struct {
-	ID     string
-	Method string
-	URL    string
-	Body   string
-	RunAt  string
+	ID       string
+	Method   string
+	URL      string
+	Body     string
+	RunAt    string
+	Status   string
+	Attempts int
 }
 
 type TaskRepository struct {
@@ -40,4 +42,15 @@ func (t *TaskRepository) Get(id string) (Task, error) {
 
 func (t *TaskRepository) Tasks() map[string]Task {
 	return t.tasks
+}
+
+func (t *TaskRepository) UpdateStatus(id, status string, attempts int) {
+	task, ok := t.tasks[id]
+	if !ok {
+		return
+	}
+
+	task.Status = status
+	task.Attempts = attempts
+	t.tasks[id] = task
 }

@@ -1,10 +1,17 @@
 package scheduler
 
 import (
+	"bytes"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/JahidNishat/scheduly/internal/repository"
+)
+
+const (
+	maxRetries = 3
+	retryDelay = 2 * time.Second
 )
 
 type Scheduler struct {
@@ -35,11 +42,36 @@ func (s *Scheduler) runPendingTasks() {
 		}
 
 		if time.Now().After(runAt) {
-			go s.executeTask(task)
+			if task.Status == "pending" {
+				s.repo.UpdateStatus(task.ID, "executing", task.Attempts)
+				go s.executeTask(task)
+			}
 		}
 	}
 }
 
 func (s *Scheduler) executeTask(task repository.Task) {
-	fmt.Printf("Executing task %s: %s %s\n ", task.ID, task.Method, task.URL)
+	attempt := 0
+
+	for attempt < maxRetries {
+		req, err := http.NewRequest(task.Method, task.URL, bytes.NewBufferString(task.Body))
+		if err != nil {
+			fmt.Println("invalid request: ", task.ID)
+			break
+		}
+
+		client := http.Client{Timeout: 5 * time.Second}
+		resp, err := client.Do(req)
+		if err == nil && resp.StatusCode >= 200 && resp.StatusCode < 300 {
+			fmt.Println("task successfully executed: ", task.ID)
+			s.repo.UpdateStatus(task.ID, "success", attempt+1)
+			return
+		}
+
+		attempt++
+		fmt.Printf("Task %s failed (attempt %d), retrying...\n", task.ID, attempt)
+		time.Sleep(retryDelay)
+	}
+
+	s.repo.UpdateStatus(task.ID, "failed", attempt)
 }
