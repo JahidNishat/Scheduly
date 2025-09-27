@@ -1,0 +1,10 @@
+server:
+  port: 8080
+
+scheduler:
+  tick_interval: 1s
+  max_retries: 3
+  retry_delay: 2s
+
+http:
+  timeout: 5s

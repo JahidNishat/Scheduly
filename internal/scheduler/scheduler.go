@@ -7,11 +7,12 @@ import (
 	"time"
 
 	"github.com/JahidNishat/scheduly/internal/repository"
+	"github.com/spf13/viper"
 )
 
-const (
-	maxRetries = 3
-	retryDelay = 2 * time.Second
+var (
+	maxRetries = viper.GetInt("scheduler.max_retries")
+	retryDelay = viper.GetDuration("scheduler.retry_delay")
 )
 
 type Scheduler struct {
@@ -24,7 +25,8 @@ func NewScheduler(repo *repository.TaskRepository) *Scheduler {
 
 func (s *Scheduler) Start() {
 	go func() {
-		ticker := time.NewTicker(1 * time.Second)
+		interval := viper.GetDuration("scheduler.tick_interval")
+		ticker := time.NewTicker(interval)
 		defer ticker.Stop()
 
 		for range ticker.C {
@@ -60,7 +62,7 @@ func (s *Scheduler) executeTask(task repository.Task) {
 			break
 		}
 
-		client := http.Client{Timeout: 5 * time.Second}
+		client := http.Client{Timeout: viper.GetDuration("http.timeout")}
 		resp, err := client.Do(req)
 		if err == nil && resp.StatusCode >= 200 && resp.StatusCode < 300 {
 			fmt.Println("task successfully executed: ", task.ID)
